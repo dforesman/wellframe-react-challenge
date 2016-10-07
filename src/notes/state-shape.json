@@ -1,0 +1,16 @@
+// page model
+
+{
+  isLoading: bool,
+  doRefresh: bool,
+  lastUpdated: timestamp,
+  page: num,
+  perPage: num,
+  maxPage: num,
+  pageArticles: [
+    //id's
+  ]
+}
+
+
+
