@@ -14,16 +14,22 @@ var config = {
   module : {
     loaders : [
       {
-        test : /\.jsx?/,
+        test : /\.(js|jsx)$/,
+        exclude: /node_modules/,
         include : APP_DIR,
-        loader : 'babel'
+        loader : 'babel-loader',
+        query: {
+          "presets" : ["es2015", "react"],
+          "plugins": ["transform-object-rest-spread"]
+        }
       }
     ]
   },
 
   resolve: {
     root: APP_DIR,
-    extensions: ['','.js','.jsx','.json']
+    extensions: ['','.js','.jsx'],
+    modulesDirectories: ['node_modules', 'actions', 'containers', 'reducers']
   }
 };
 
