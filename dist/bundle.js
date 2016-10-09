@@ -24881,9 +24881,21 @@
 	      dispatch((0, _actions.fetchStories)(selectedEndpoint));
 	    }
 	  }, {
+	    key: 'renderStory',
+	    value: function renderStory(storyId) {
+	      return _react2.default.createElement(
+	        'li',
+	        { key: storyId },
+	        storyId
+	      );
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var storiesCount = this.props.stories ? this.props.stories.length : 0;
+	      var stories = this.props.stories;
+	
+	      var storiesCount = stories ? stories.length : 0;
+	      var storyText = storiesCount === 1 ? 'story' : 'stories';
 	      // let storiesText = `${storiesCount} stories loaded`
 	
 	      return _react2.default.createElement(
@@ -24897,7 +24909,15 @@
 	        _react2.default.createElement(
 	          'p',
 	          null,
-	          storiesCount + ' stories loaded'
+	          storiesCount,
+	          ' ',
+	          storyText,
+	          ' loaded'
+	        ),
+	        _react2.default.createElement(
+	          'ul',
+	          null,
+	          stories.map(this.renderStory)
 	        )
 	      );
 	    }

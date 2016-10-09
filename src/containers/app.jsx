@@ -12,14 +12,27 @@ class App extends React.Component {
   }
 
 
+  renderStory(storyId) {
+    return (
+      <li key={storyId}>{storyId}</li>
+    )
+  }
+
+
   render () {
-    let storiesCount = (this.props.stories) ? this.props.stories.length : 0
+    let {stories} = this.props
+    let storiesCount = (stories) ? stories.length : 0
+    let storyText = (storiesCount === 1) ? 'story' : 'stories'
     // let storiesText = `${storiesCount} stories loaded`
 
     return (
       <div>
         <p>Hello React!</p>
-        <p>{`${storiesCount} stories loaded`}</p>
+        <p>{storiesCount} {storyText} loaded</p>
+
+        <ul>
+          {stories.map(this.renderStory)}
+        </ul>
       </div>
     )
   }
