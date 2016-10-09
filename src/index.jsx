@@ -6,7 +6,7 @@ import thunk from 'redux-thunk'
 import createLogger from 'redux-logger'
 import reducer from './reducers'
 
-import App from './containers/app'
+import MyApp from './containers/app'
 
 // set up our Thunk middleware, with logging for dev environment
 const middleware = [ thunk ]
@@ -24,7 +24,7 @@ const store = createStore(
 // render our root application, wrapped in a store
 render(
   <Provider store={store}>
-    <App/>
+    <MyApp/>
   </Provider>,
   document.getElementById('app')
 )

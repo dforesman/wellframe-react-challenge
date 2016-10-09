@@ -1,8 +1,20 @@
 import { combineReducers } from 'redux'
 import {
   STORIES_REQUEST, STORIES_RECEIVED,
-  STORIES_FAILED, STORIES_INVALIDATED
+  STORIES_FAILED, STORIES_INVALIDATED,
+  SELECT_ENDPOINT
 } from '../actions'
+
+
+const selectedEndpoint = (state = 'new', action) => {
+  switch (action.type) {
+    case SELECT_ENDPOINT:
+      return action.endpoint
+    default:
+      return state
+  }
+}
+
 
 
 const stories = (state = {
@@ -27,7 +39,7 @@ const stories = (state = {
         ...state,
         isFetching: false,
         didInvalidate: false,
-        stories: action.stories,
+        items: action.stories,
         lastUpdated: action.receivedAt
       }
     // todo: ADD ERROR HANDLING
@@ -36,8 +48,26 @@ const stories = (state = {
   }
 }
 
+const storiesByEndpoint = (state = { }, action) => {
+  switch (action.type) {
+    case STORIES_INVALIDATED:
+    case STORIES_RECEIVED:
+    case STORIES_REQUEST:
+      return {
+        ...state,
+        [action.endpoint]: stories(state[action.endpoint], action)
+      }
+    default:
+      return state
+  }
+}
+
+
+
+
 const rootReducer = combineReducers({
-  stories
+  storiesByEndpoint,
+  selectedEndpoint
 })
 
 export default rootReducer

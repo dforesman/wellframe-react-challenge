@@ -24691,6 +24691,20 @@
 	
 	var _actions = __webpack_require__(/*! ../actions */ 207);
 	
+	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+	
+	var selectedEndpoint = function selectedEndpoint() {
+	  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'new';
+	  var action = arguments[1];
+	
+	  switch (action.type) {
+	    case _actions.SELECT_ENDPOINT:
+	      return action.endpoint;
+	    default:
+	      return state;
+	  }
+	};
+	
 	var stories = function stories() {
 	  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {
 	    isFetching: false,
@@ -24713,7 +24727,7 @@
 	      return _extends({}, state, {
 	        isFetching: false,
 	        didInvalidate: false,
-	        stories: action.stories,
+	        items: action.stories,
 	        lastUpdated: action.receivedAt
 	      });
 	    // todo: ADD ERROR HANDLING
@@ -24722,8 +24736,23 @@
 	  }
 	};
 	
+	var storiesByEndpoint = function storiesByEndpoint() {
+	  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	  var action = arguments[1];
+	
+	  switch (action.type) {
+	    case _actions.STORIES_INVALIDATED:
+	    case _actions.STORIES_RECEIVED:
+	    case _actions.STORIES_REQUEST:
+	      return _extends({}, state, _defineProperty({}, action.endpoint, stories(state[action.endpoint], action)));
+	    default:
+	      return state;
+	  }
+	};
+	
 	var rootReducer = (0, _redux.combineReducers)({
-	  stories: stories
+	  storiesByEndpoint: storiesByEndpoint,
+	  selectedEndpoint: selectedEndpoint
 	});
 	
 	exports.default = rootReducer;
@@ -24740,10 +24769,19 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+	var SELECT_ENDPOINT = exports.SELECT_ENDPOINT = 'SELECT_ENDPOINT';
+	
 	var STORIES_REQUEST = exports.STORIES_REQUEST = 'STORIES_REQUEST';
 	var STORIES_RECEIVED = exports.STORIES_RECEIVED = 'STORIES_RECEIVED';
 	var STORIES_FAILED = exports.STORIES_FAILED = 'STORIES_FAILED';
 	var STORIES_INVALIDATED = exports.STORIES_INVALIDATED = 'STORIES_INVALIDATED';
+	
+	var selectEndpoint = exports.selectEndpoint = function selectEndpoint(endpoint) {
+	  return {
+	    type: SELECT_ENDPOINT,
+	    endpoint: endpoint
+	  };
+	};
 	
 	var storiesRequest = exports.storiesRequest = function storiesRequest() {
 	  var endpoint = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'new';
@@ -24770,23 +24808,26 @@
 	  };
 	};
 	
+	var storiesInvalidated = exports.storiesInvalidated = function storiesInvalidated(endpoint) {
+	  return {
+	    type: STORIES_INVALIDATED,
+	    endpoint: endpoint
+	  };
+	};
+	
 	// todo: this should check state for cached stories and load from memory if possible... next step
 	var fetchStories = exports.fetchStories = function fetchStories() {
 	  var endpoint = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'new';
 	  return function (dispatch) {
 	    dispatch(storiesRequest(endpoint));
-	    return fetch('https://hacker-news.firebaseio.com/v0/' + endpoint + 'stories').then(function (response) {
+	    return fetch('https://hacker-news.firebaseio.com/v0/' + endpoint + 'stories.json').then(function (response) {
+	      console.warn(response);
+	      return response;
+	    }).then(function (response) {
 	      return response.json();
 	    }).then(function (json) {
 	      return dispatch(storiesReceived(endpoint, json));
 	    });
-	  };
-	};
-	
-	var storiesInvalidated = exports.storiesInvalidated = function storiesInvalidated(endpoint) {
-	  return {
-	    type: STORIES_INVALIDATED,
-	    endpoint: endpoint
 	  };
 	};
 
@@ -24835,14 +24876,14 @@
 	    value: function componentDidMount() {
 	      var _props = this.props;
 	      var dispatch = _props.dispatch;
-	      var endpoint = _props.endpoint;
+	      var selectedEndpoint = _props.selectedEndpoint;
 	
-	      dispatch((0, _actions.storiesRequest)(endpoint));
+	      dispatch((0, _actions.fetchStories)(selectedEndpoint));
 	    }
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var storiesCount = this.props.stories ? this.props.stories.length() : 0;
+	      var storiesCount = this.props.stories ? this.props.stories.length : 0;
 	      // let storiesText = `${storiesCount} stories loaded`
 	
 	      return _react2.default.createElement(
@@ -24865,13 +24906,21 @@
 	  return App;
 	}(_react2.default.Component);
 	
-	var mapStateToProps = function mapStateToProps(state) {
-	  var endpoint = state.endpoint;
-	  var storiesList = state.storiesList;
+	App.propTypes = {
+	  selectedEndpoint: _react2.default.PropTypes.string.isRequired,
+	  stories: _react2.default.PropTypes.array.isRequired,
+	  isFetching: _react2.default.PropTypes.bool.isRequired,
+	  lastUpdated: _react2.default.PropTypes.number,
+	  dispatch: _react2.default.PropTypes.func.isRequired
+	};
 	
-	  var _ref = storiesList || {
+	var mapStateToProps = function mapStateToProps(state) {
+	  var storiesByEndpoint = state.storiesByEndpoint;
+	  var selectedEndpoint = state.selectedEndpoint;
+	
+	  var _ref = storiesByEndpoint[selectedEndpoint] || {
 	    isFetching: true,
-	    stories: []
+	    items: []
 	  };
 	
 	  var isFetching = _ref.isFetching;
@@ -24880,7 +24929,7 @@
 	
 	
 	  return {
-	    endpoint: endpoint,
+	    selectedEndpoint: selectedEndpoint,
 	    stories: stories,
 	    isFetching: isFetching,
 	    lastUpdated: lastUpdated
