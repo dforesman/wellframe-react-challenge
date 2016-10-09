@@ -1,7 +1,7 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { storiesRequest, storiesReceived, storiesFailed, storiesInvalidated, fetchStories } from '../actions'
-
+import { storiesRequest, storiesReceived, storiesFailed, storiesInvalidated, fetchStories } from '../actions/stories'
+import Story from 'containers/story'
 
 class App extends React.Component {
 
@@ -13,8 +13,12 @@ class App extends React.Component {
 
 
   renderStory(storyId) {
+    // const myStoryId = storyId
+
     return (
-      <li key={storyId}>{storyId}</li>
+      <li key={storyId}>
+        <Story storyId={storyId} />
+      </li>
     )
   }
 
@@ -23,7 +27,6 @@ class App extends React.Component {
     let {stories} = this.props
     let storiesCount = (stories) ? stories.length : 0
     let storyText = (storiesCount === 1) ? 'story' : 'stories'
-    // let storiesText = `${storiesCount} stories loaded`
 
     return (
       <div>
@@ -31,7 +34,7 @@ class App extends React.Component {
         <p>{storiesCount} {storyText} loaded</p>
 
         <ul>
-          {stories.map(this.renderStory)}
+          {stories.slice(0,30).map(this.renderStory)}
         </ul>
       </div>
     )
@@ -46,8 +49,6 @@ App.propTypes = {
   lastUpdated: React.PropTypes.number,
   dispatch: React.PropTypes.func.isRequired
 }
-
-
 
 
 const mapStateToProps = state => {

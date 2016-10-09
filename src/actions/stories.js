@@ -1,4 +1,5 @@
 export const SELECT_ENDPOINT = 'SELECT_ENDPOINT'
+export const ENDPOINT_OPTIONS = ['new', 'top', 'best']
 
 export const STORIES_REQUEST = 'STORIES_REQUEST'
 export const STORIES_RECEIVED = 'STORIES_RECEIVED'
@@ -42,10 +43,6 @@ export const storiesInvalidated = endpoint => ({
 export const fetchStories = (endpoint = 'new') => dispatch => {
   dispatch(storiesRequest(endpoint))
   return fetch(`https://hacker-news.firebaseio.com/v0/${endpoint}stories.json`)
-    .then(response => {
-      console.warn(response)
-      return response
-    })
     .then(response => response.json())
     .then(json => dispatch(storiesReceived(endpoint, json)))
 }

@@ -1,6 +1,6 @@
 import React from 'react'
 import {render} from 'react-dom'
-import { createStore, applyMiddleware } from 'redux'
+import { createStore, applyMiddleware, compose } from 'redux'
 import { Provider } from 'react-redux'
 import thunk from 'redux-thunk'
 import createLogger from 'redux-logger'
@@ -15,11 +15,15 @@ if (process.env.NODE_ENV !== 'production') {
   middleware.push(createLogger())
 }
 
+// set up integration with redux developer tools
+const composeEnhancers = (process.env.NODE_ENV !== 'production') ? (window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose) : compose;
+
 const store = createStore(
   reducer,
-  applyMiddleware(...middleware)
+  composeEnhancers(applyMiddleware(...middleware))
 )
 
+const {dispatch} = store
 
 // render our root application, wrapped in a store
 render(

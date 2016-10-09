@@ -71,7 +71,7 @@
 	
 	var _reducers2 = _interopRequireDefault(_reducers);
 	
-	var _app = __webpack_require__(/*! ./containers/app */ 208);
+	var _app = __webpack_require__(/*! ./containers/app */ 209);
 	
 	var _app2 = _interopRequireDefault(_app);
 	
@@ -84,9 +84,15 @@
 	  middleware.push((0, _reduxLogger2.default)());
 	}
 	
-	var store = (0, _redux.createStore)(_reducers2.default, _redux.applyMiddleware.apply(undefined, middleware));
+	// set up integration with redux developer tools
+	var composeEnhancers = process.env.NODE_ENV !== 'production' ? window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || _redux.compose : _redux.compose;
+	
+	var store = (0, _redux.createStore)(_reducers2.default, composeEnhancers(_redux.applyMiddleware.apply(undefined, middleware)));
+	
+	var dispatch = store.dispatch;
 	
 	// render our root application, wrapped in a store
+	
 	(0, _reactDom.render)(_react2.default.createElement(
 	  _reactRedux.Provider,
 	  { store: store },
@@ -24687,9 +24693,17 @@
 	
 	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 	
+	// actions for story collections
+	
+	
+	// actions for individual stories
+	
+	
 	var _redux = __webpack_require__(/*! redux */ 172);
 	
-	var _actions = __webpack_require__(/*! ../actions */ 207);
+	var _stories = __webpack_require__(/*! ../actions/stories */ 207);
+	
+	var _story = __webpack_require__(/*! ../actions/story */ 208);
 	
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 	
@@ -24698,7 +24712,7 @@
 	  var action = arguments[1];
 	
 	  switch (action.type) {
-	    case _actions.SELECT_ENDPOINT:
+	    case _stories.SELECT_ENDPOINT:
 	      return action.endpoint;
 	    default:
 	      return state;
@@ -24714,16 +24728,16 @@
 	  var action = arguments[1];
 	
 	  switch (action.type) {
-	    case _actions.STORIES_INVALIDATED:
+	    case _stories.STORIES_INVALIDATED:
 	      return _extends({}, state, {
 	        didInvalidate: true
 	      });
-	    case _actions.STORIES_REQUEST:
+	    case _stories.STORIES_REQUEST:
 	      return _extends({}, state, {
 	        isFetching: true,
 	        didInvalidate: false
 	      });
-	    case _actions.STORIES_RECEIVED:
+	    case _stories.STORIES_RECEIVED:
 	      return _extends({}, state, {
 	        isFetching: false,
 	        didInvalidate: false,
@@ -24741,10 +24755,58 @@
 	  var action = arguments[1];
 	
 	  switch (action.type) {
-	    case _actions.STORIES_INVALIDATED:
-	    case _actions.STORIES_RECEIVED:
-	    case _actions.STORIES_REQUEST:
+	    case _stories.STORIES_INVALIDATED:
+	    case _stories.STORIES_RECEIVED:
+	    case _stories.STORIES_REQUEST:
 	      return _extends({}, state, _defineProperty({}, action.endpoint, stories(state[action.endpoint], action)));
+	    default:
+	      return state;
+	  }
+	};
+	
+	////////////////////// STORY reducers
+	
+	
+	var story = function story() {
+	  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {
+	    isFetching: false,
+	    didInvalidate: false,
+	    content: {}
+	  };
+	  var action = arguments[1];
+	
+	  switch (action.type) {
+	    case _story.STORY_INVALIDATED:
+	      return _extends({}, state, {
+	        didInvalidate: true
+	      });
+	    case _story.STORY_REQUEST:
+	      return _extends({}, state, {
+	        isFetching: true,
+	        didInvalidate: false
+	      });
+	    case _story.STORY_RECEIVED:
+	      return _extends({}, state, {
+	        isFetching: false,
+	        didInvalidate: false,
+	        content: action.storyContent,
+	        lastUpdated: action.receivedAt
+	      });
+	    // todo: ADD ERROR HANDLING
+	    default:
+	      return state;
+	  }
+	};
+	
+	var contentByStoryId = function contentByStoryId() {
+	  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	  var action = arguments[1];
+	
+	  switch (action.type) {
+	    case _story.STORY_INVALIDATED:
+	    case _story.STORY_RECEIVED:
+	    case _story.STORY_REQUEST:
+	      return _extends({}, state, _defineProperty({}, action.storyId, story(state[action.storyId], action)));
 	    default:
 	      return state;
 	  }
@@ -24752,16 +24814,17 @@
 	
 	var rootReducer = (0, _redux.combineReducers)({
 	  storiesByEndpoint: storiesByEndpoint,
-	  selectedEndpoint: selectedEndpoint
+	  selectedEndpoint: selectedEndpoint,
+	  contentByStoryId: contentByStoryId
 	});
 	
 	exports.default = rootReducer;
 
 /***/ },
 /* 207 */
-/*!******************************!*\
-  !*** ./src/actions/index.js ***!
-  \******************************/
+/*!********************************!*\
+  !*** ./src/actions/stories.js ***!
+  \********************************/
 /***/ function(module, exports) {
 
 	'use strict';
@@ -24770,6 +24833,7 @@
 	  value: true
 	});
 	var SELECT_ENDPOINT = exports.SELECT_ENDPOINT = 'SELECT_ENDPOINT';
+	var ENDPOINT_OPTIONS = exports.ENDPOINT_OPTIONS = ['new', 'top', 'best'];
 	
 	var STORIES_REQUEST = exports.STORIES_REQUEST = 'STORIES_REQUEST';
 	var STORIES_RECEIVED = exports.STORIES_RECEIVED = 'STORIES_RECEIVED';
@@ -24821,9 +24885,6 @@
 	  return function (dispatch) {
 	    dispatch(storiesRequest(endpoint));
 	    return fetch('https://hacker-news.firebaseio.com/v0/' + endpoint + 'stories.json').then(function (response) {
-	      console.warn(response);
-	      return response;
-	    }).then(function (response) {
 	      return response.json();
 	    }).then(function (json) {
 	      return dispatch(storiesReceived(endpoint, json));
@@ -24833,6 +24894,66 @@
 
 /***/ },
 /* 208 */
+/*!******************************!*\
+  !*** ./src/actions/story.js ***!
+  \******************************/
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var STORY_REQUEST = exports.STORY_REQUEST = 'STORY_REQUEST';
+	var STORY_RECEIVED = exports.STORY_RECEIVED = 'STORY_RECEIVED';
+	var STORY_FAILED = exports.STORY_FAILED = 'STORY_FAILED';
+	var STORY_INVALIDATED = exports.STORY_INVALIDATED = 'STORY_INVALIDATED';
+	
+	var storyRequest = exports.storyRequest = function storyRequest(storyId) {
+	  return {
+	    type: STORY_REQUEST,
+	    storyId: storyId
+	  };
+	};
+	
+	var storyReceived = exports.storyReceived = function storyReceived(storyId, json) {
+	  return {
+	    type: STORY_RECEIVED,
+	    storyId: storyId,
+	    storyContent: json,
+	    receivedAt: Date.now()
+	  };
+	};
+	
+	var storyFailed = exports.storyFailed = function storyFailed(storyId, err) {
+	  return {
+	    type: STORY_FAILED,
+	    storyId: storyId,
+	    error: err
+	  };
+	};
+	
+	var storyInvalidated = exports.storyInvalidated = function storyInvalidated(storyId) {
+	  return {
+	    type: STORY_INVALIDATED,
+	    storyId: storyId
+	  };
+	};
+	
+	// todo: this should check state for cached story and load from memory if possible... next step
+	var fetchStory = exports.fetchStory = function fetchStory(storyId) {
+	  return function (dispatch) {
+	    dispatch(storyRequest(storyId));
+	    return fetch('https://hacker-news.firebaseio.com/v0/item/' + storyId + '.json').then(function (response) {
+	      return response.json();
+	    }).then(function (json) {
+	      dispatch(storyReceived(storyId, json));
+	    });
+	  };
+	};
+
+/***/ },
+/* 209 */
 /*!********************************!*\
   !*** ./src/containers/app.jsx ***!
   \********************************/
@@ -24852,7 +24973,11 @@
 	
 	var _reactRedux = __webpack_require__(/*! react-redux */ 186);
 	
-	var _actions = __webpack_require__(/*! ../actions */ 207);
+	var _stories = __webpack_require__(/*! ../actions/stories */ 207);
+	
+	var _story = __webpack_require__(/*! containers/story */ 210);
+	
+	var _story2 = _interopRequireDefault(_story);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -24878,15 +25003,17 @@
 	      var dispatch = _props.dispatch;
 	      var selectedEndpoint = _props.selectedEndpoint;
 	
-	      dispatch((0, _actions.fetchStories)(selectedEndpoint));
+	      dispatch((0, _stories.fetchStories)(selectedEndpoint));
 	    }
 	  }, {
 	    key: 'renderStory',
 	    value: function renderStory(storyId) {
+	      // const myStoryId = storyId
+	
 	      return _react2.default.createElement(
 	        'li',
 	        { key: storyId },
-	        storyId
+	        _react2.default.createElement(_story2.default, { storyId: storyId })
 	      );
 	    }
 	  }, {
@@ -24896,7 +25023,6 @@
 	
 	      var storiesCount = stories ? stories.length : 0;
 	      var storyText = storiesCount === 1 ? 'story' : 'stories';
-	      // let storiesText = `${storiesCount} stories loaded`
 	
 	      return _react2.default.createElement(
 	        'div',
@@ -24917,7 +25043,7 @@
 	        _react2.default.createElement(
 	          'ul',
 	          null,
-	          stories.map(this.renderStory)
+	          stories.slice(0, 30).map(this.renderStory)
 	        )
 	      );
 	    }
@@ -24957,6 +25083,93 @@
 	};
 	
 	exports.default = (0, _reactRedux.connect)(mapStateToProps)(App);
+
+/***/ },
+/* 210 */
+/*!**********************************!*\
+  !*** ./src/containers/story.jsx ***!
+  \**********************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(/*! react */ 2);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _reactRedux = __webpack_require__(/*! react-redux */ 186);
+	
+	var _story = __webpack_require__(/*! ../actions/story */ 208);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var Story = function (_React$Component) {
+	  _inherits(Story, _React$Component);
+	
+	  function Story() {
+	    _classCallCheck(this, Story);
+	
+	    return _possibleConstructorReturn(this, (Story.__proto__ || Object.getPrototypeOf(Story)).apply(this, arguments));
+	  }
+	
+	  _createClass(Story, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      var _props = this.props;
+	      var dispatch = _props.dispatch;
+	      var storyId = _props.storyId;
+	
+	      dispatch((0, _story.fetchStory)(storyId));
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      if (!this.props.isFetching) {
+	        return _react2.default.createElement(
+	          'p',
+	          null,
+	          this.props.content.title
+	        );
+	      } else {
+	        return _react2.default.createElement(
+	          'p',
+	          null,
+	          'Loading\u2026'
+	        );
+	      }
+	    }
+	  }]);
+	
+	  return Story;
+	}(_react2.default.Component);
+	
+	Story.propTypes = {
+	  storyId: _react2.default.PropTypes.number.isRequired,
+	  content: _react2.default.PropTypes.object,
+	  isFetching: _react2.default.PropTypes.bool.isRequired,
+	  lastUpdated: _react2.default.PropTypes.number,
+	  dispatch: _react2.default.PropTypes.func.isRequired
+	};
+	
+	var mapStateToProps = function mapStateToProps(state, props) {
+	  var contentByStoryId = state.contentByStoryId;
+	
+	  return contentByStoryId[props.storyId] || { isFetching: true };
+	};
+	
+	exports.default = (0, _reactRedux.connect)(mapStateToProps)(Story);
 
 /***/ }
 /******/ ]);
