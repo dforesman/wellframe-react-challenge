@@ -42,3 +42,22 @@ export const fetchStory = (storyId) => dispatch => {
       dispatch(storyReceived(storyId, json))
     })
 }
+
+
+
+const shouldFetchStory = (state, storyId) => {
+  const story = state.contentByStoryId[storyId]
+  if (!story) {return true}
+  if (story.isFetching) {return false}
+  return story.didInvalidate
+}
+
+
+export const fetchStoryIfNeeded = (storyId) => (dispatch, getState) => {
+  if (shouldFetchStory(getState(), storyId)) {
+    return dispatch(fetchStory(storyId))
+  }
+}
+
+
+

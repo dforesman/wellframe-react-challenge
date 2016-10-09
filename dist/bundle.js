@@ -24882,7 +24882,7 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.fetchStories = exports.storiesInvalidated = exports.storiesFailed = exports.storiesReceived = exports.storiesRequest = exports.selectEndpoint = exports.STORIES_INVALIDATED = exports.STORIES_FAILED = exports.STORIES_RECEIVED = exports.STORIES_REQUEST = exports.ENDPOINT_OPTIONS = exports.SELECT_ENDPOINT = undefined;
+	exports.fetchStoriesIfNeeded = exports.fetchStories = exports.storiesInvalidated = exports.storiesFailed = exports.storiesReceived = exports.storiesRequest = exports.selectEndpoint = exports.STORIES_INVALIDATED = exports.STORIES_FAILED = exports.STORIES_RECEIVED = exports.STORIES_REQUEST = exports.ENDPOINT_OPTIONS = exports.SELECT_ENDPOINT = undefined;
 	
 	var _pagination = __webpack_require__(/*! ./pagination */ 208);
 	
@@ -24945,6 +24945,28 @@
 	      dispatch(storiesReceived(endpoint, json));
 	      dispatch((0, _pagination.resetPagination)(json.length));
 	    });
+	  };
+	};
+	
+	var shouldFetchStories = function shouldFetchStories(state) {
+	  var endpoint = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'new';
+	
+	  var stories = state.storiesByEndpoint[endpoint];
+	  if (!stories) {
+	    return true;
+	  }
+	  if (stories.isFetching) {
+	    return false;
+	  }
+	  return stories.didInvalidate;
+	};
+	
+	var fetchStoriesIfNeeded = exports.fetchStoriesIfNeeded = function fetchStoriesIfNeeded() {
+	  var endpoint = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'new';
+	  return function (dispatch, getState) {
+	    if (shouldFetchStories(getState(), endpoint)) {
+	      return dispatch(fetchStories(endpoint));
+	    }
 	  };
 	};
 
@@ -25049,6 +25071,25 @@
 	    });
 	  };
 	};
+	
+	var shouldFetchStory = function shouldFetchStory(state, storyId) {
+	  var story = state.contentByStoryId[storyId];
+	  if (!story) {
+	    return true;
+	  }
+	  if (story.isFetching) {
+	    return false;
+	  }
+	  return story.didInvalidate;
+	};
+	
+	var fetchStoryIfNeeded = exports.fetchStoryIfNeeded = function fetchStoryIfNeeded(storyId) {
+	  return function (dispatch, getState) {
+	    if (shouldFetchStory(getState(), storyId)) {
+	      return dispatch(fetchStory(storyId));
+	    }
+	  };
+	};
 
 /***/ },
 /* 210 */
@@ -25103,7 +25144,7 @@
 	      var dispatch = _props.dispatch;
 	      var selectedEndpoint = _props.selectedEndpoint;
 	
-	      dispatch((0, _stories.fetchStories)(selectedEndpoint));
+	      dispatch((0, _stories.fetchStoriesIfNeeded)(selectedEndpoint));
 	    }
 	  }, {
 	    key: 'renderStory',
@@ -25301,7 +25342,7 @@
 	      var dispatch = _props.dispatch;
 	      var storyId = _props.storyId;
 	
-	      dispatch((0, _story.fetchStory)(storyId));
+	      dispatch((0, _story.fetchStoryIfNeeded)(storyId));
 	    }
 	  }, {
 	    key: 'render',

@@ -1,6 +1,6 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { storiesRequest, storiesReceived, storiesFailed, storiesInvalidated, fetchStories } from '../actions/stories'
+import { storiesRequest, storiesReceived, storiesFailed, storiesInvalidated, fetchStories, fetchStoriesIfNeeded } from '../actions/stories'
 import Story from 'containers/story'
 import { resetPagination, goNextPage, goPrevPage } from '../actions/pagination'
 
@@ -9,7 +9,7 @@ class App extends React.Component {
 
   componentDidMount() {
     const { dispatch, selectedEndpoint } = this.props
-    dispatch(fetchStories(selectedEndpoint))
+    dispatch(fetchStoriesIfNeeded(selectedEndpoint))
   }
 
 

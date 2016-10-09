@@ -42,6 +42,8 @@ export const storiesInvalidated = endpoint => ({
 })
 
 
+
+
 // todo: this should check state for cached stories and load from memory if possible... next step
 export const fetchStories = (endpoint = 'new') => dispatch => {
   dispatch(storiesRequest(endpoint))
@@ -53,4 +55,27 @@ export const fetchStories = (endpoint = 'new') => dispatch => {
       dispatch(resetPagination(json.length))
     })
 }
+
+
+
+const shouldFetchStories = (state, endpoint = 'new') => {
+  const stories = state.storiesByEndpoint[endpoint]
+  if (!stories) {return true}
+  if (stories.isFetching) {return false}
+  return stories.didInvalidate
+}
+
+
+
+export const fetchStoriesIfNeeded = (endpoint = 'new') => (dispatch, getState) => {
+  if (shouldFetchStories(getState(), endpoint)) {
+    return dispatch(fetchStories(endpoint))
+  }
+}
+
+
+
+
+
+
 

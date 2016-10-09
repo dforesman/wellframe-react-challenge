@@ -1,12 +1,12 @@
 import React from 'react'
 import { connect } from 'react-redux'
-import { storyRequest, storyReceived, storyFailed, storyInvalidated, fetchStory } from '../actions/story'
+import { storyRequest, storyReceived, storyFailed, storyInvalidated, fetchStoryIfNeeded } from '../actions/story'
 
 class Story extends React.Component {
 
   componentDidMount(){
     const {dispatch, storyId} = this.props
-    dispatch(fetchStory(storyId))
+    dispatch(fetchStoryIfNeeded(storyId))
   }
 
   render(){
