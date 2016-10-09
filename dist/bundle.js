@@ -25115,23 +25115,76 @@
 	      );
 	    }
 	  }, {
-	    key: 'render',
-	    value: function render() {
+	    key: 'shouldRenderStories',
+	    value: function shouldRenderStories() {
+	      var isFetching = this.props.isFetching;
+	
+	
+	      if (!isFetching) {
+	        return this.renderStories();
+	      }
+	    }
+	  }, {
+	    key: 'renderStories',
+	    value: function renderStories() {
 	      var _props2 = this.props;
 	      var stories = _props2.stories;
 	      var page = _props2.page;
 	      var perPage = _props2.perPage;
 	      var totalItems = _props2.totalItems;
 	      var maxPage = _props2.maxPage;
-	      var isFetching = _props2.isFetching;
 	      var dispatch = _props2.dispatch;
+	      // const storiesCount = (stories) ? stories.length : 0
+	      // const storyText = (storiesCount === 1) ? 'story' : 'stories'
+	
+	      //pagination calcs
+	
+	      var minIndex = page * perPage;
+	      var maxIndex = (page + 1) * perPage;
+	
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(
+	          'ol',
+	          { start: minIndex + 1 },
+	          stories.slice(minIndex, maxIndex).map(this.renderStory)
+	        ),
+	        _react2.default.createElement(
+	          'p',
+	          null,
+	          'Page: ',
+	          page + 1,
+	          ' of ',
+	          maxPage + 1
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          null,
+	          _react2.default.createElement(
+	            'button',
+	            { onClick: function onClick(e) {
+	                return dispatch((0, _pagination.goPrevPage)());
+	              } },
+	            'Prev'
+	          ),
+	          _react2.default.createElement(
+	            'button',
+	            { onClick: function onClick(e) {
+	                return dispatch((0, _pagination.goNextPage)());
+	              } },
+	            'Next'
+	          )
+	        )
+	      );
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var stories = this.props.stories;
 	
 	      var storiesCount = stories ? stories.length : 0;
 	      var storyText = storiesCount === 1 ? 'story' : 'stories';
-	
-	      //pagination calcs
-	      var minIndex = page * perPage;
-	      var maxIndex = (page + 1) * perPage;
 	
 	      return _react2.default.createElement(
 	        'div',
@@ -25149,41 +25202,7 @@
 	          storyText,
 	          ' loaded'
 	        ),
-	        _react2.default.createElement(
-	          'div',
-	          null,
-	          _react2.default.createElement(
-	            'ul',
-	            null,
-	            stories.slice(minIndex, maxIndex).map(this.renderStory)
-	          ),
-	          _react2.default.createElement(
-	            'p',
-	            null,
-	            'Page: ',
-	            page + 1,
-	            ' of ',
-	            maxPage + 1
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            null,
-	            _react2.default.createElement(
-	              'button',
-	              { onClick: function onClick(e) {
-	                  return dispatch((0, _pagination.goPrevPage)());
-	                } },
-	              'Prev'
-	            ),
-	            _react2.default.createElement(
-	              'button',
-	              { onClick: function onClick(e) {
-	                  return dispatch((0, _pagination.goNextPage)());
-	                } },
-	              'Next'
-	            )
-	          )
-	        )
+	        this.shouldRenderStories()
 	      );
 	    }
 	  }]);

@@ -22,12 +22,19 @@ class App extends React.Component {
   }
 
 
+  shouldRenderStories() {
+    const {isFetching} = this.props
+
+    if (!isFetching) {
+      return this.renderStories()
+    }
+  }
 
 
-  render () {
-    const {stories, page, perPage, totalItems, maxPage, isFetching, dispatch} = this.props
-    const storiesCount = (stories) ? stories.length : 0
-    const storyText = (storiesCount === 1) ? 'story' : 'stories'
+  renderStories() {
+    const {stories, page, perPage, totalItems, maxPage, dispatch} = this.props
+    // const storiesCount = (stories) ? stories.length : 0
+    // const storyText = (storiesCount === 1) ? 'story' : 'stories'
 
     //pagination calcs
     const minIndex = (page * perPage)
@@ -35,22 +42,35 @@ class App extends React.Component {
 
     return (
       <div>
+        <ol start={minIndex + 1}>
+          {stories.slice(minIndex, maxIndex).map(this.renderStory)}
+        </ol>
+
+        <p>Page: {page + 1} of {maxPage + 1}</p>
+
+        <div>
+          <button onClick={e => dispatch(goPrevPage())}>Prev</button>
+          <button onClick={e => dispatch(goNextPage())}>Next</button>
+        </div>
+      </div>
+    )
+  }
+
+
+
+
+
+  render () {
+    const {stories} = this.props
+    const storiesCount = (stories) ? stories.length : 0
+    const storyText = (storiesCount === 1) ? 'story' : 'stories'
+
+    return (
+      <div>
         <p>Hello React!</p>
         <p>{storiesCount} {storyText} loaded</p>
 
-        <div>
-          <ul>
-            {stories.slice(minIndex, maxIndex).map(this.renderStory)}
-          </ul>
-
-          <p>Page: {page + 1} of {maxPage + 1}</p>
-
-          <div>
-            <button onClick={e => dispatch(goPrevPage())}>Prev</button>
-            <button onClick={e => dispatch(goNextPage())}>Next</button>
-          </div>
-        </div>
-
+        {this.shouldRenderStories()}
       </div>
     )
   }
