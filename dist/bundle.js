@@ -71,7 +71,7 @@
 	
 	var _reducers2 = _interopRequireDefault(_reducers);
 	
-	var _app = __webpack_require__(/*! ./containers/app */ 209);
+	var _app = __webpack_require__(/*! ./containers/app */ 210);
 	
 	var _app2 = _interopRequireDefault(_app);
 	
@@ -24699,11 +24699,16 @@
 	// actions for individual stories
 	
 	
+	// actions for pagination
+	
+	
 	var _redux = __webpack_require__(/*! redux */ 172);
 	
 	var _stories = __webpack_require__(/*! ../actions/stories */ 207);
 	
-	var _story = __webpack_require__(/*! ../actions/story */ 208);
+	var _story = __webpack_require__(/*! ../actions/story */ 209);
+	
+	var _pagination = __webpack_require__(/*! ../actions/pagination */ 208);
 	
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 	
@@ -24812,10 +24817,55 @@
 	  }
 	};
 	
+	////////////////////////////////////////////////////////////////////////////
+	// pagination
+	
+	
+	var pagination = function pagination() {
+	  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+	  var action = arguments[1];
+	
+	  switch (action.type) {
+	    case _pagination.PAGE_RESET:
+	      console.warn('page reset triggered!', state, action);
+	      return _extends({}, state, {
+	        perPage: _pagination.PER_PAGE,
+	        page: 0,
+	        totalItems: action.itemCount,
+	        maxPage: Math.floor(action.itemCount / _pagination.PER_PAGE)
+	      });
+	
+	    case _pagination.PAGE_NEXT:
+	      return _extends({}, state, {
+	        page: state.page >= state.maxPage ? 0 : state.page + 1
+	      });
+	
+	    case _pagination.PAGE_PREV:
+	      return _extends({}, state, {
+	        page: state.page === 0 ? state.maxPage : state.page - 1
+	      });
+	
+	    // case PAGE_CHANGE:
+	    //   Math.ceil()
+	
+	    // // case PAGE_NEXT:
+	    // //   return {
+	    // //     ...state,
+	
+	    // //   }
+	
+	
+	    default:
+	      // console.log('unrecognized pagination action: ' + action.type + ": ", state, action)
+	      return state;
+	  }
+	};
+	
 	var rootReducer = (0, _redux.combineReducers)({
 	  storiesByEndpoint: storiesByEndpoint,
 	  selectedEndpoint: selectedEndpoint,
-	  contentByStoryId: contentByStoryId
+	  contentByStoryId: contentByStoryId,
+	  pagination: pagination
 	});
 	
 	exports.default = rootReducer;
@@ -24825,13 +24875,17 @@
 /*!********************************!*\
   !*** ./src/actions/stories.js ***!
   \********************************/
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+	exports.fetchStories = exports.storiesInvalidated = exports.storiesFailed = exports.storiesReceived = exports.storiesRequest = exports.selectEndpoint = exports.STORIES_INVALIDATED = exports.STORIES_FAILED = exports.STORIES_RECEIVED = exports.STORIES_REQUEST = exports.ENDPOINT_OPTIONS = exports.SELECT_ENDPOINT = undefined;
+	
+	var _pagination = __webpack_require__(/*! ./pagination */ 208);
+	
 	var SELECT_ENDPOINT = exports.SELECT_ENDPOINT = 'SELECT_ENDPOINT';
 	var ENDPOINT_OPTIONS = exports.ENDPOINT_OPTIONS = ['new', 'top', 'best'];
 	
@@ -24887,13 +24941,57 @@
 	    return fetch('https://hacker-news.firebaseio.com/v0/' + endpoint + 'stories.json').then(function (response) {
 	      return response.json();
 	    }).then(function (json) {
-	      return dispatch(storiesReceived(endpoint, json));
+	      console.log('json received', json);
+	      dispatch(storiesReceived(endpoint, json));
+	      dispatch((0, _pagination.resetPagination)(json.length));
 	    });
 	  };
 	};
 
 /***/ },
 /* 208 */
+/*!***********************************!*\
+  !*** ./src/actions/pagination.js ***!
+  \***********************************/
+/***/ function(module, exports) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	var PAGE_NEXT = exports.PAGE_NEXT = 'PAGE_NEXT';
+	var PAGE_PREV = exports.PAGE_PREV = 'PAGE_PREV';
+	var PAGE_CHANGE = exports.PAGE_CHANGE = 'PAGE_CHANGE';
+	var PAGE_RESET = exports.PAGE_RESET = 'PAGE_RESET';
+	
+	var PAGINATION_STATE_KEY = exports.PAGINATION_STATE_KEY = 'pagination';
+	
+	var PER_PAGE = exports.PER_PAGE = 30;
+	
+	// user actions
+	
+	var resetPagination = exports.resetPagination = function resetPagination(itemCount) {
+	  return {
+	    type: PAGE_RESET,
+	    itemCount: itemCount
+	  };
+	};
+	
+	var goNextPage = exports.goNextPage = function goNextPage() {
+	  return {
+	    type: PAGE_NEXT
+	  };
+	};
+	
+	var goPrevPage = exports.goPrevPage = function goPrevPage() {
+	  return {
+	    type: PAGE_PREV
+	  };
+	};
+
+/***/ },
+/* 209 */
 /*!******************************!*\
   !*** ./src/actions/story.js ***!
   \******************************/
@@ -24953,7 +25051,7 @@
 	};
 
 /***/ },
-/* 209 */
+/* 210 */
 /*!********************************!*\
   !*** ./src/containers/app.jsx ***!
   \********************************/
@@ -24975,9 +25073,11 @@
 	
 	var _stories = __webpack_require__(/*! ../actions/stories */ 207);
 	
-	var _story = __webpack_require__(/*! containers/story */ 210);
+	var _story = __webpack_require__(/*! containers/story */ 211);
 	
 	var _story2 = _interopRequireDefault(_story);
+	
+	var _pagination = __webpack_require__(/*! ../actions/pagination */ 208);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -25008,8 +25108,6 @@
 	  }, {
 	    key: 'renderStory',
 	    value: function renderStory(storyId) {
-	      // const myStoryId = storyId
-	
 	      return _react2.default.createElement(
 	        'li',
 	        { key: storyId },
@@ -25019,10 +25117,21 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var stories = this.props.stories;
+	      var _props2 = this.props;
+	      var stories = _props2.stories;
+	      var page = _props2.page;
+	      var perPage = _props2.perPage;
+	      var totalItems = _props2.totalItems;
+	      var maxPage = _props2.maxPage;
+	      var isFetching = _props2.isFetching;
+	      var dispatch = _props2.dispatch;
 	
 	      var storiesCount = stories ? stories.length : 0;
 	      var storyText = storiesCount === 1 ? 'story' : 'stories';
+	
+	      //pagination calcs
+	      var minIndex = page * perPage;
+	      var maxIndex = (page + 1) * perPage;
 	
 	      return _react2.default.createElement(
 	        'div',
@@ -25041,9 +25150,39 @@
 	          ' loaded'
 	        ),
 	        _react2.default.createElement(
-	          'ul',
+	          'div',
 	          null,
-	          stories.slice(0, 30).map(this.renderStory)
+	          _react2.default.createElement(
+	            'ul',
+	            null,
+	            stories.slice(minIndex, maxIndex).map(this.renderStory)
+	          ),
+	          _react2.default.createElement(
+	            'p',
+	            null,
+	            'Page: ',
+	            page + 1,
+	            ' of ',
+	            maxPage + 1
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            null,
+	            _react2.default.createElement(
+	              'button',
+	              { onClick: function onClick(e) {
+	                  return dispatch((0, _pagination.goPrevPage)());
+	                } },
+	              'Prev'
+	            ),
+	            _react2.default.createElement(
+	              'button',
+	              { onClick: function onClick(e) {
+	                  return dispatch((0, _pagination.goNextPage)());
+	                } },
+	              'Next'
+	            )
+	          )
 	        )
 	      );
 	    }
@@ -25063,6 +25202,7 @@
 	var mapStateToProps = function mapStateToProps(state) {
 	  var storiesByEndpoint = state.storiesByEndpoint;
 	  var selectedEndpoint = state.selectedEndpoint;
+	  var pagination = state.pagination;
 	
 	  var _ref = storiesByEndpoint[selectedEndpoint] || {
 	    isFetching: true,
@@ -25073,19 +25213,30 @@
 	  var lastUpdated = _ref.lastUpdated;
 	  var stories = _ref.items;
 	
+	  //pagination props
+	
+	  var page = pagination.page;
+	  var perPage = pagination.perPage;
+	  var totalItems = pagination.totalItems;
+	  var maxPage = pagination.maxPage;
+	
 	
 	  return {
 	    selectedEndpoint: selectedEndpoint,
 	    stories: stories,
 	    isFetching: isFetching,
-	    lastUpdated: lastUpdated
+	    lastUpdated: lastUpdated,
+	    page: page,
+	    perPage: perPage,
+	    totalItems: totalItems,
+	    maxPage: maxPage
 	  };
 	};
 	
 	exports.default = (0, _reactRedux.connect)(mapStateToProps)(App);
 
 /***/ },
-/* 210 */
+/* 211 */
 /*!**********************************!*\
   !*** ./src/containers/story.jsx ***!
   \**********************************/
@@ -25105,7 +25256,7 @@
 	
 	var _reactRedux = __webpack_require__(/*! react-redux */ 186);
 	
-	var _story = __webpack_require__(/*! ../actions/story */ 208);
+	var _story = __webpack_require__(/*! ../actions/story */ 209);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	

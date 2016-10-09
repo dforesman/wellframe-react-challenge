@@ -1,3 +1,6 @@
+import { resetPagination } from './pagination'
+
+
 export const SELECT_ENDPOINT = 'SELECT_ENDPOINT'
 export const ENDPOINT_OPTIONS = ['new', 'top', 'best']
 
@@ -44,6 +47,10 @@ export const fetchStories = (endpoint = 'new') => dispatch => {
   dispatch(storiesRequest(endpoint))
   return fetch(`https://hacker-news.firebaseio.com/v0/${endpoint}stories.json`)
     .then(response => response.json())
-    .then(json => dispatch(storiesReceived(endpoint, json)))
+    .then(json => {
+      console.log('json received', json)
+      dispatch(storiesReceived(endpoint, json))
+      dispatch(resetPagination(json.length))
+    })
 }
 

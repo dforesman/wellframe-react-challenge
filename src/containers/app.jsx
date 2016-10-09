@@ -2,6 +2,7 @@ import React from 'react'
 import { connect } from 'react-redux'
 import { storiesRequest, storiesReceived, storiesFailed, storiesInvalidated, fetchStories } from '../actions/stories'
 import Story from 'containers/story'
+import { resetPagination, goNextPage, goPrevPage } from '../actions/pagination'
 
 class App extends React.Component {
 
@@ -13,8 +14,6 @@ class App extends React.Component {
 
 
   renderStory(storyId) {
-    // const myStoryId = storyId
-
     return (
       <li key={storyId}>
         <Story storyId={storyId} />
@@ -23,19 +22,35 @@ class App extends React.Component {
   }
 
 
+
+
   render () {
-    let {stories} = this.props
-    let storiesCount = (stories) ? stories.length : 0
-    let storyText = (storiesCount === 1) ? 'story' : 'stories'
+    const {stories, page, perPage, totalItems, maxPage, isFetching, dispatch} = this.props
+    const storiesCount = (stories) ? stories.length : 0
+    const storyText = (storiesCount === 1) ? 'story' : 'stories'
+
+    //pagination calcs
+    const minIndex = (page * perPage)
+    const maxIndex = ((page + 1) * perPage)
 
     return (
       <div>
         <p>Hello React!</p>
         <p>{storiesCount} {storyText} loaded</p>
 
-        <ul>
-          {stories.slice(0,30).map(this.renderStory)}
-        </ul>
+        <div>
+          <ul>
+            {stories.slice(minIndex, maxIndex).map(this.renderStory)}
+          </ul>
+
+          <p>Page: {page + 1} of {maxPage + 1}</p>
+
+          <div>
+            <button onClick={e => dispatch(goPrevPage())}>Prev</button>
+            <button onClick={e => dispatch(goNextPage())}>Next</button>
+          </div>
+        </div>
+
       </div>
     )
   }
@@ -52,7 +67,7 @@ App.propTypes = {
 
 
 const mapStateToProps = state => {
-  const { storiesByEndpoint, selectedEndpoint } = state
+  const { storiesByEndpoint, selectedEndpoint, pagination } = state
   const {
     isFetching,
     lastUpdated,
@@ -62,11 +77,22 @@ const mapStateToProps = state => {
     items: []
   }
 
+  //pagination props
+  const {
+    page, perPage, totalItems, maxPage
+  } = pagination
+
+
+
   return {
     selectedEndpoint,
     stories,
     isFetching,
-    lastUpdated
+    lastUpdated,
+    page,
+    perPage,
+    totalItems,
+    maxPage
   }
 }
 

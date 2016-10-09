@@ -15,6 +15,13 @@ import {
 } from '../actions/story'
 
 
+// actions for pagination
+import {
+  PAGE_NEXT, PAGE_PREV, PAGE_CHANGE, PAGE_RESET, PER_PAGE
+} from '../actions/pagination'
+
+
+
 
 const selectedEndpoint = (state = 'new', action) => {
   switch (action.type) {
@@ -123,14 +130,57 @@ const contentByStoryId = (state = { }, action) => {
 
 
 
+////////////////////////////////////////////////////////////////////////////
+// pagination
 
+
+const pagination = (state = {}, action) => {
+  switch (action.type) {
+    case PAGE_RESET:
+      console.warn('page reset triggered!', state, action)
+      return {
+        ...state,
+        perPage: PER_PAGE,
+        page: 0,
+        totalItems: action.itemCount,
+        maxPage: Math.floor(action.itemCount / PER_PAGE)
+      }
+
+    case PAGE_NEXT:
+      return {
+        ...state,
+        page: (state.page >= state.maxPage) ? 0 : (state.page + 1)
+      }
+
+    case PAGE_PREV:
+      return {
+        ...state,
+        page: (state.page === 0) ? state.maxPage : (state.page - 1)
+      }
+
+    // case PAGE_CHANGE:
+    //   Math.ceil()
+
+    // // case PAGE_NEXT:
+    // //   return {
+    // //     ...state,
+
+    // //   }
+
+
+    default:
+      // console.log('unrecognized pagination action: ' + action.type + ": ", state, action)
+      return state
+  }
+}
 
 
 
 const rootReducer = combineReducers({
   storiesByEndpoint,
   selectedEndpoint,
-  contentByStoryId
+  contentByStoryId,
+  pagination
 })
 
 export default rootReducer
