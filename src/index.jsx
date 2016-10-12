@@ -10,7 +10,6 @@ import MyApp from './containers/app'
 
 // set up our Thunk middleware, with logging for dev environment
 const middleware = [ thunk ]
-
 if (process.env.NODE_ENV !== 'production') {
   middleware.push(createLogger())
 }
@@ -22,8 +21,6 @@ const store = createStore(
   reducer,
   composeEnhancers(applyMiddleware(...middleware))
 )
-
-const {dispatch} = store
 
 // render our root application, wrapped in a store
 render(

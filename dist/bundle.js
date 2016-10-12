@@ -79,7 +79,6 @@
 	
 	// set up our Thunk middleware, with logging for dev environment
 	var middleware = [_reduxThunk2.default];
-	
 	if (process.env.NODE_ENV !== 'production') {
 	  middleware.push((0, _reduxLogger2.default)());
 	}
@@ -89,10 +88,7 @@
 	
 	var store = (0, _redux.createStore)(_reducers2.default, composeEnhancers(_redux.applyMiddleware.apply(undefined, middleware)));
 	
-	var dispatch = store.dispatch;
-	
 	// render our root application, wrapped in a store
-	
 	(0, _reactDom.render)(_react2.default.createElement(
 	  _reactRedux.Provider,
 	  { store: store },
@@ -24712,6 +24708,9 @@
 	
 	function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 	
+	////////////////////////////////////////////////////////////////////////////
+	// ENDPOINT reducer
+	
 	var selectedEndpoint = function selectedEndpoint() {
 	  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'new';
 	  var action = arguments[1];
@@ -24724,6 +24723,10 @@
 	  }
 	};
 	
+	////////////////////////////////////////////////////////////////////////////
+	// STORIES reducers
+	
+	// ajax request/response actions
 	var stories = function stories() {
 	  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {
 	    isFetching: false,
@@ -24755,6 +24758,7 @@
 	  }
 	};
 	
+	// index stories by ID, keyed under current endpoint ('new', 'top', etc)
 	var storiesByEndpoint = function storiesByEndpoint() {
 	  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 	  var action = arguments[1];
@@ -24769,9 +24773,10 @@
 	  }
 	};
 	
-	////////////////////// STORY reducers
+	////////////////////////////////////////////////////////////////////////////
+	// STORY reducers
 	
-	
+	// ajax request/response actions
 	var story = function story() {
 	  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {
 	    isFetching: false,
@@ -24803,6 +24808,7 @@
 	  }
 	};
 	
+	// story content, indexed by story ID. caches can be shared across endpoints
 	var contentByStoryId = function contentByStoryId() {
 	  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 	  var action = arguments[1];
@@ -24818,8 +24824,7 @@
 	};
 	
 	////////////////////////////////////////////////////////////////////////////
-	// pagination
-	
+	// PAGINATION reducer
 	
 	var pagination = function pagination() {
 	  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -24827,40 +24832,26 @@
 	
 	  switch (action.type) {
 	    case _pagination.PAGE_RESET:
-	      console.warn('page reset triggered!', state, action);
 	      return _extends({}, state, {
 	        perPage: _pagination.PER_PAGE,
 	        page: 0,
 	        totalItems: action.itemCount,
 	        maxPage: Math.floor(action.itemCount / _pagination.PER_PAGE)
 	      });
-	
 	    case _pagination.PAGE_NEXT:
 	      return _extends({}, state, {
 	        page: state.page >= state.maxPage ? 0 : state.page + 1
 	      });
-	
 	    case _pagination.PAGE_PREV:
 	      return _extends({}, state, {
 	        page: state.page === 0 ? state.maxPage : state.page - 1
 	      });
-	
-	    // case PAGE_CHANGE:
-	    //   Math.ceil()
-	
-	    // // case PAGE_NEXT:
-	    // //   return {
-	    // //     ...state,
-	
-	    // //   }
-	
-	
 	    default:
-	      // console.log('unrecognized pagination action: ' + action.type + ": ", state, action)
 	      return state;
 	  }
 	};
 	
+	// compose our reducers for export to the application
 	var rootReducer = (0, _redux.combineReducers)({
 	  storiesByEndpoint: storiesByEndpoint,
 	  selectedEndpoint: selectedEndpoint,
@@ -24933,7 +24924,7 @@
 	  };
 	};
 	
-	// todo: this should check state for cached stories and load from memory if possible... next step
+	// loads 'top 500' story IDs from the user's chosen endpoint
 	var fetchStories = exports.fetchStories = function fetchStories() {
 	  var endpoint = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'new';
 	  return function (dispatch) {
@@ -24941,13 +24932,15 @@
 	    return fetch('https://hacker-news.firebaseio.com/v0/' + endpoint + 'stories.json').then(function (response) {
 	      return response.json();
 	    }).then(function (json) {
-	      console.log('json received', json);
+	      // todo: look into if double-dispatching is standard redux practice
 	      dispatch(storiesReceived(endpoint, json));
 	      dispatch((0, _pagination.resetPagination)(json.length));
 	    });
 	  };
 	};
 	
+	// checks if story IDs for an endpoint are already loaded, or in the process of loading
+	//  helper for fetchStoriesIfNeeded
 	var shouldFetchStories = function shouldFetchStories(state) {
 	  var endpoint = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'new';
 	
@@ -24961,11 +24954,16 @@
 	  return stories.didInvalidate;
 	};
 	
+	// cached story load - call this from view. Will pull appropriate stories from the cache or load them via API
 	var fetchStoriesIfNeeded = exports.fetchStoriesIfNeeded = function fetchStoriesIfNeeded() {
 	  var endpoint = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'new';
 	  return function (dispatch, getState) {
-	    if (shouldFetchStories(getState(), endpoint)) {
+	    var state = getState();
+	    if (shouldFetchStories(state, endpoint)) {
 	      return dispatch(fetchStories(endpoint));
+	    } else {
+	      // reset our pagination if we're pulling from the cache, as the reset won't be triggered by an ajax load
+	      dispatch((0, _pagination.resetPagination)(state.storiesByEndpoint[endpoint].items.length));
 	    }
 	  };
 	};
@@ -24991,14 +24989,19 @@
 	
 	var PER_PAGE = exports.PER_PAGE = 30;
 	
-	// user actions
+	////////////////////////////////////////////////////////////////////////////
+	// system actions
 	
+	// called when a category is changed or loaded
 	var resetPagination = exports.resetPagination = function resetPagination(itemCount) {
 	  return {
 	    type: PAGE_RESET,
 	    itemCount: itemCount
 	  };
 	};
+	
+	////////////////////////////////////////////////////////////////////////////
+	// user actions
 	
 	var goNextPage = exports.goNextPage = function goNextPage() {
 	  return {
@@ -25060,7 +25063,7 @@
 	  };
 	};
 	
-	// todo: this should check state for cached story and load from memory if possible... next step
+	// fetch a story from the API, given a story ID
 	var fetchStory = exports.fetchStory = function fetchStory(storyId) {
 	  return function (dispatch) {
 	    dispatch(storyRequest(storyId));
@@ -25072,6 +25075,7 @@
 	  };
 	};
 	
+	// check if a given storyID is already loaded in the cache
 	var shouldFetchStory = function shouldFetchStory(state, storyId) {
 	  var story = state.contentByStoryId[storyId];
 	  if (!story) {
@@ -25083,6 +25087,7 @@
 	  return story.didInvalidate;
 	};
 	
+	// call this from view - will load a story either from cache or from API
 	var fetchStoryIfNeeded = exports.fetchStoryIfNeeded = function fetchStoryIfNeeded(storyId) {
 	  return function (dispatch, getState) {
 	    if (shouldFetchStory(getState(), storyId)) {
@@ -25114,9 +25119,13 @@
 	
 	var _stories = __webpack_require__(/*! ../actions/stories */ 207);
 	
-	var _story = __webpack_require__(/*! containers/story */ 211);
+	var _story = __webpack_require__(/*! components/story */ 211);
 	
 	var _story2 = _interopRequireDefault(_story);
+	
+	var _selector = __webpack_require__(/*! components/selector */ 212);
+	
+	var _selector2 = _interopRequireDefault(_selector);
 	
 	var _pagination = __webpack_require__(/*! ../actions/pagination */ 208);
 	
@@ -25131,11 +25140,18 @@
 	var App = function (_React$Component) {
 	  _inherits(App, _React$Component);
 	
-	  function App() {
+	  function App(props) {
 	    _classCallCheck(this, App);
 	
-	    return _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).apply(this, arguments));
+	    // bind event handlers to the instance
+	    var _this = _possibleConstructorReturn(this, (App.__proto__ || Object.getPrototypeOf(App)).call(this, props));
+	
+	    _this.handleEndpointChange = _this.handleEndpointChange.bind(_this);
+	    return _this;
 	  }
+	
+	  // upon mounting, the app should fetch stories for the default endpoint
+	
 	
 	  _createClass(App, [{
 	    key: 'componentDidMount',
@@ -25146,6 +25162,9 @@
 	
 	      dispatch((0, _stories.fetchStoriesIfNeeded)(selectedEndpoint));
 	    }
+	
+	    // helper for rendering stories in a keyed list
+	
 	  }, {
 	    key: 'renderStory',
 	    value: function renderStory(storyId) {
@@ -25155,16 +25174,22 @@
 	        _react2.default.createElement(_story2.default, { storyId: storyId })
 	      );
 	    }
+	
+	    // view helper - renders stories if IDs are loaded, otherwise returns nothing
+	
 	  }, {
 	    key: 'shouldRenderStories',
 	    value: function shouldRenderStories() {
 	      var isFetching = this.props.isFetching;
 	
-	
 	      if (!isFetching) {
 	        return this.renderStories();
 	      }
 	    }
+	
+	    // renders the table of stories, along with pagination controls
+	    //  todo: break this out into a separate component
+	
 	  }, {
 	    key: 'renderStories',
 	    value: function renderStories() {
@@ -25175,8 +25200,6 @@
 	      var totalItems = _props2.totalItems;
 	      var maxPage = _props2.maxPage;
 	      var dispatch = _props2.dispatch;
-	      // const storiesCount = (stories) ? stories.length : 0
-	      // const storyText = (storiesCount === 1) ? 'story' : 'stories'
 	
 	      //pagination calcs
 	
@@ -25219,10 +25242,15 @@
 	        )
 	      );
 	    }
+	
+	    // main rendering frame with endpoint selection control
+	
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var stories = this.props.stories;
+	      var _props3 = this.props;
+	      var stories = _props3.stories;
+	      var selectedEndpoint = _props3.selectedEndpoint;
 	
 	      var storiesCount = stories ? stories.length : 0;
 	      var storyText = storiesCount === 1 ? 'story' : 'stories';
@@ -25230,21 +25258,43 @@
 	      return _react2.default.createElement(
 	        'div',
 	        null,
-	        _react2.default.createElement(
-	          'p',
-	          null,
-	          'Hello React!'
-	        ),
+	        _react2.default.createElement(_selector2.default, { value: selectedEndpoint, onChange: this.handleEndpointChange, options: _stories.ENDPOINT_OPTIONS }),
+	        _react2.default.createElement('hr', null),
 	        _react2.default.createElement(
 	          'p',
 	          null,
 	          storiesCount,
 	          ' ',
 	          storyText,
-	          ' loaded'
+	          ' loaded for category ',
+	          selectedEndpoint
 	        ),
+	        _react2.default.createElement('hr', null),
 	        this.shouldRenderStories()
 	      );
+	    }
+	
+	    // event handler - fired when the Selector is changed by the user
+	
+	  }, {
+	    key: 'handleEndpointChange',
+	    value: function handleEndpointChange(nextEndpoint) {
+	      var dispatch = this.props.dispatch;
+	
+	      dispatch((0, _stories.selectEndpoint)(nextEndpoint));
+	    }
+	
+	    // dispatch a new fetch if the user has changed the selected endpoint
+	
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(nextProps) {
+	      if (nextProps.selectedEndpoint !== this.props.selectedEndpoint) {
+	        var dispatch = nextProps.dispatch;
+	        var selectedEndpoint = nextProps.selectedEndpoint;
+	
+	        dispatch((0, _stories.fetchStoriesIfNeeded)(selectedEndpoint));
+	      }
 	    }
 	  }]);
 	
@@ -25260,14 +25310,14 @@
 	};
 	
 	var mapStateToProps = function mapStateToProps(state) {
+	  // get relevant parts of the state
 	  var storiesByEndpoint = state.storiesByEndpoint;
 	  var selectedEndpoint = state.selectedEndpoint;
 	  var pagination = state.pagination;
 	
-	  var _ref = storiesByEndpoint[selectedEndpoint] || {
-	    isFetching: true,
-	    items: []
-	  };
+	  // extract relevant props from state for current endpoint
+	
+	  var _ref = storiesByEndpoint[selectedEndpoint] || { isFetching: true, items: [] };
 	
 	  var isFetching = _ref.isFetching;
 	  var lastUpdated = _ref.lastUpdated;
@@ -25280,6 +25330,7 @@
 	  var totalItems = pagination.totalItems;
 	  var maxPage = pagination.maxPage;
 	
+	  // return props object to the app
 	
 	  return {
 	    selectedEndpoint: selectedEndpoint,
@@ -25298,7 +25349,7 @@
 /***/ },
 /* 211 */
 /*!**********************************!*\
-  !*** ./src/containers/story.jsx ***!
+  !*** ./src/components/story.jsx ***!
   \**********************************/
 /***/ function(module, exports, __webpack_require__) {
 
@@ -25337,6 +25388,9 @@
 	
 	  _createClass(Story, [{
 	    key: 'componentDidMount',
+	
+	
+	    // upon mounting, request story data from the API (or cache, if it exists)
 	    value: function componentDidMount() {
 	      var _props = this.props;
 	      var dispatch = _props.dispatch;
@@ -25347,11 +25401,17 @@
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      if (!this.props.isFetching) {
+	      var _props2 = this.props;
+	      var content = _props2.content;
+	      var isFetching = _props2.isFetching;
+	
+	
+	      if (!isFetching) {
+	        var myTitle = content.deleted ? '[DELETED]' : content.title;
 	        return _react2.default.createElement(
 	          'p',
 	          null,
-	          this.props.content.title
+	          myTitle
 	        );
 	      } else {
 	        return _react2.default.createElement(
@@ -25381,6 +25441,77 @@
 	};
 	
 	exports.default = (0, _reactRedux.connect)(mapStateToProps)(Story);
+
+/***/ },
+/* 212 */
+/*!*************************************!*\
+  !*** ./src/components/selector.jsx ***!
+  \*************************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(/*! react */ 2);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; } // Simple <select> component, receives all props and events from parent
+	
+	var Selector = function (_React$Component) {
+	  _inherits(Selector, _React$Component);
+	
+	  function Selector() {
+	    _classCallCheck(this, Selector);
+	
+	    return _possibleConstructorReturn(this, (Selector.__proto__ || Object.getPrototypeOf(Selector)).apply(this, arguments));
+	  }
+	
+	  _createClass(Selector, [{
+	    key: 'render',
+	    value: function render() {
+	      var _props = this.props;
+	      var options = _props.options;
+	      var value = _props.value;
+	      var _onChange = _props.onChange;
+	
+	      return _react2.default.createElement(
+	        'select',
+	        { onChange: function onChange(event) {
+	            return _onChange(event.target.value);
+	          }, value: value },
+	        options.map(function (option) {
+	          return _react2.default.createElement(
+	            'option',
+	            { key: option, value: option },
+	            option
+	          );
+	        })
+	      );
+	    }
+	  }]);
+	
+	  return Selector;
+	}(_react2.default.Component);
+	
+	Selector.propTypes = {
+	  value: _react2.default.PropTypes.string.isRequired,
+	  options: _react2.default.PropTypes.arrayOf(_react2.default.PropTypes.string.isRequired).isRequired,
+	  onChange: _react2.default.PropTypes.func.isRequired
+	};
+	
+	exports.default = Selector;
 
 /***/ }
 /******/ ]);

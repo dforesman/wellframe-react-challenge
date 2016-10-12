@@ -31,7 +31,8 @@ export const storyInvalidated = storyId => ({
 })
 
 
-// todo: this should check state for cached story and load from memory if possible... next step
+
+// fetch a story from the API, given a story ID
 export const fetchStory = (storyId) => dispatch => {
   dispatch(storyRequest(storyId))
   return fetch(`https://hacker-news.firebaseio.com/v0/item/${storyId}.json`)
@@ -44,7 +45,7 @@ export const fetchStory = (storyId) => dispatch => {
 }
 
 
-
+// check if a given storyID is already loaded in the cache
 const shouldFetchStory = (state, storyId) => {
   const story = state.contentByStoryId[storyId]
   if (!story) {return true}
@@ -53,11 +54,9 @@ const shouldFetchStory = (state, storyId) => {
 }
 
 
+// call this from view - will load a story either from cache or from API
 export const fetchStoryIfNeeded = (storyId) => (dispatch, getState) => {
   if (shouldFetchStory(getState(), storyId)) {
     return dispatch(fetchStory(storyId))
   }
 }
-
-
-

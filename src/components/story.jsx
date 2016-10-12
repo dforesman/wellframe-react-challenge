@@ -4,15 +4,19 @@ import { storyRequest, storyReceived, storyFailed, storyInvalidated, fetchStoryI
 
 class Story extends React.Component {
 
+  // upon mounting, request story data from the API (or cache, if it exists)
   componentDidMount(){
     const {dispatch, storyId} = this.props
     dispatch(fetchStoryIfNeeded(storyId))
   }
 
   render(){
-    if (!this.props.isFetching) {
+    const {content, isFetching} = this.props
+
+    if (!isFetching) {
+      const myTitle = (content.deleted) ? '[DELETED]' : content.title
       return (
-        <p>{this.props.content.title}</p>
+        <p>{myTitle}</p>
       )
     } else {
       return (

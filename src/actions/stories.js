@@ -44,20 +44,21 @@ export const storiesInvalidated = endpoint => ({
 
 
 
-// todo: this should check state for cached stories and load from memory if possible... next step
+// loads 'top 500' story IDs from the user's chosen endpoint
 export const fetchStories = (endpoint = 'new') => dispatch => {
   dispatch(storiesRequest(endpoint))
   return fetch(`https://hacker-news.firebaseio.com/v0/${endpoint}stories.json`)
     .then(response => response.json())
     .then(json => {
-      console.log('json received', json)
+      // todo: look into if double-dispatching is standard redux practice
       dispatch(storiesReceived(endpoint, json))
       dispatch(resetPagination(json.length))
     })
 }
 
 
-
+// checks if story IDs for an endpoint are already loaded, or in the process of loading
+//  helper for fetchStoriesIfNeeded
 const shouldFetchStories = (state, endpoint = 'new') => {
   const stories = state.storiesByEndpoint[endpoint]
   if (!stories) {return true}
@@ -66,16 +67,13 @@ const shouldFetchStories = (state, endpoint = 'new') => {
 }
 
 
-
+// cached story load - call this from view. Will pull appropriate stories from the cache or load them via API
 export const fetchStoriesIfNeeded = (endpoint = 'new') => (dispatch, getState) => {
-  if (shouldFetchStories(getState(), endpoint)) {
+  const state = getState()
+  if (shouldFetchStories(state, endpoint)) {
     return dispatch(fetchStories(endpoint))
+  } else {
+    // reset our pagination if we're pulling from the cache, as the reset won't be triggered by an ajax load
+    dispatch(resetPagination(state.storiesByEndpoint[endpoint].items.length))
   }
 }
-
-
-
-
-
-
-

@@ -21,7 +21,8 @@ import {
 } from '../actions/pagination'
 
 
-
+////////////////////////////////////////////////////////////////////////////
+// ENDPOINT reducer
 
 const selectedEndpoint = (state = 'new', action) => {
   switch (action.type) {
@@ -33,7 +34,10 @@ const selectedEndpoint = (state = 'new', action) => {
 }
 
 
+////////////////////////////////////////////////////////////////////////////
+// STORIES reducers
 
+// ajax request/response actions
 const stories = (state = {
   isFetching: false,
   didInvalidate: false,
@@ -65,6 +69,7 @@ const stories = (state = {
   }
 }
 
+// index stories by ID, keyed under current endpoint ('new', 'top', etc)
 const storiesByEndpoint = (state = { }, action) => {
   switch (action.type) {
     case STORIES_INVALIDATED:
@@ -80,9 +85,10 @@ const storiesByEndpoint = (state = { }, action) => {
 }
 
 
-////////////////////// STORY reducers
+////////////////////////////////////////////////////////////////////////////
+// STORY reducers
 
-
+// ajax request/response actions
 const story = (state = {
   isFetching: false,
   didInvalidate: false,
@@ -114,6 +120,7 @@ const story = (state = {
   }
 }
 
+// story content, indexed by story ID. caches can be shared across endpoints
 const contentByStoryId = (state = { }, action) => {
   switch (action.type) {
     case STORY_INVALIDATED:
@@ -131,13 +138,11 @@ const contentByStoryId = (state = { }, action) => {
 
 
 ////////////////////////////////////////////////////////////////////////////
-// pagination
-
+// PAGINATION reducer
 
 const pagination = (state = {}, action) => {
   switch (action.type) {
     case PAGE_RESET:
-      console.warn('page reset triggered!', state, action)
       return {
         ...state,
         perPage: PER_PAGE,
@@ -145,37 +150,23 @@ const pagination = (state = {}, action) => {
         totalItems: action.itemCount,
         maxPage: Math.floor(action.itemCount / PER_PAGE)
       }
-
     case PAGE_NEXT:
       return {
         ...state,
         page: (state.page >= state.maxPage) ? 0 : (state.page + 1)
       }
-
     case PAGE_PREV:
       return {
         ...state,
         page: (state.page === 0) ? state.maxPage : (state.page - 1)
       }
-
-    // case PAGE_CHANGE:
-    //   Math.ceil()
-
-    // // case PAGE_NEXT:
-    // //   return {
-    // //     ...state,
-
-    // //   }
-
-
     default:
-      // console.log('unrecognized pagination action: ' + action.type + ": ", state, action)
       return state
   }
 }
 
 
-
+// compose our reducers for export to the application
 const rootReducer = combineReducers({
   storiesByEndpoint,
   selectedEndpoint,

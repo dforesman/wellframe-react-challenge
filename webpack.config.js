@@ -29,7 +29,7 @@ var config = {
   resolve: {
     root: APP_DIR,
     extensions: ['','.js','.jsx'],
-    modulesDirectories: ['node_modules', 'actions', 'containers', 'reducers']
+    modulesDirectories: ['node_modules', 'actions', 'containers', 'reducers', 'components']
   }
 };
 

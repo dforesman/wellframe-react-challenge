@@ -8,12 +8,17 @@ export const PAGINATION_STATE_KEY = 'pagination'
 export const PER_PAGE = 30;
 
 
-// user actions
+////////////////////////////////////////////////////////////////////////////
+// system actions
 
+// called when a category is changed or loaded
 export const resetPagination = (itemCount) => ({
   type: PAGE_RESET,
   itemCount
 })
+
+////////////////////////////////////////////////////////////////////////////
+// user actions
 
 export const goNextPage = () => ({
   type: PAGE_NEXT
