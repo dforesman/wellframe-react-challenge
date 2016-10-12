@@ -1,0 +1,13 @@
+// define any bootstrap var overrides:
+
+// wellframe bootstrap colors, extracted from wellframe site
+$brand-primary: #428bca;
+$brand-success: #5cb85c;
+$brand-warning: #f0ad4e;
+$brand-danger: #d9534f;
+$brand-info: #5bc0de;
+
+
+
+// import Bootstrap library
+@import '../../node_modules/bootstrap-sass/assets/stylesheets/_bootstrap.scss';
