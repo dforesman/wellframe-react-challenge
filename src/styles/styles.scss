@@ -1,15 +1,8 @@
-// define any bootstrap var overrides:
-
-
 ///////////////////////////////////////////////////////////////////////
 //  BOOTSTRAP
 
-// wellframe bootstrap colors, extracted from wellframe site
-$brand-primary: #428bca;
-$brand-success: #5cb85c;
-$brand-warning: #f0ad4e;
-$brand-danger: #d9534f;
-$brand-info: #5bc0de;
+// hackerNews color defs
+$brand-primary: #ff6600;
 
 @import '../../node_modules/bootstrap-sass/assets/stylesheets/_bootstrap.scss';
 
@@ -22,28 +15,8 @@ $fa-font-size-base: $font-size-base;
 
 
 
-
-.pagerButtons {
-  clear: both;
-
-  .btn-group {
-    float: left;
-    margin-right: 15px;
-  }
-
-  p {
-    line-height: 30px;
-    // margin-left: 15px;
-  }
-
-  .fa-chevron-left {
-    margin-right: 0.5em;
-  }
-
-  .fa-chevron-right {
-    margin-left: 0.5em;
-  }
-}
+///////////////////////////////////////////////////////////////////////
+//  TWEAKS
 
 
 select.category-selector {
@@ -54,6 +27,25 @@ select.category-selector {
 }
 
 
+// tweaks to BS pager styles
+.pager {
+  .previous i {
+    margin-right: 0.75em;
+  }
+
+  .next i {
+    margin-left: 0.75em;
+  }
+
+  a {
+    cursor: pointer;
+  }
+}
+
+
 .story-list-heading {
-  text-transform: capitalize;
+    text-transform: capitalize;
+    small {
+      text-transform: none;
+    }
 }

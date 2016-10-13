@@ -33,10 +33,15 @@ class App extends React.Component {
     const {isFetching} = this.props
     if (!isFetching) {
       return this.renderStories()
+    } else {
+      return (
+        <h2 className='story-list-heading'>Loading Stories&hellip; <i className='fa fa-spinner fa-spin'></i></h2>
+      )
     }
   }
 
 
+  // gets the appropriate heading text based on endpoint - 'newest', 'best', 'top'
   getLabelTitle(endpoint){
     switch (endpoint) {
       case 'new':
@@ -47,6 +52,27 @@ class App extends React.Component {
   }
 
 
+  // renders a pager element. pass justified=false for a compact version
+  renderPager(dispatch, justified = true){
+    return (
+      <nav className='story-list-pager'>
+        <ul className='pager'>
+          <li className={(justified) ? 'previous' : ''}>
+            <a onClick={e => dispatch(goPrevPage())}>
+              <i className='fa fa-chevron-left'></i>
+              Prev
+            </a>
+          </li>
+          <li className={(justified) ? 'next' : ''}>
+            <a onClick={e => dispatch(goNextPage())}>
+              Next
+              <i className='fa fa-chevron-right'></i>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    )
+  }
 
 
   // renders the table of stories, along with pagination controls
@@ -62,26 +88,17 @@ class App extends React.Component {
       <div className='row'>
         <div className='col-sm-12'>
 
-          <h2 className='story-list-heading'>{titleLabel} {stories.length} Stories</h2>
+          <div className='story-list-heading'>
+            <h2>{titleLabel} {stories.length} Stories <small>Page {page+1} of {maxPage+1}</small></h2>
+          </div>
 
+          {this.renderPager(dispatch)}
 
           <ol start={minIndex + 1} className='row'>
             {stories.slice(minIndex, maxIndex).map(this.renderStory)}
           </ol>
 
-          <div className='pagerButtons'>
-            <div className='btn-group'>
-              <button className='btn btn-sm btn-primary' onClick={e => dispatch(goPrevPage())}>
-                <i className='fa fa-chevron-left'></i>
-                Prev
-              </button>
-              <button className='btn btn-sm btn-primary' onClick={e => dispatch(goNextPage())}>
-                Next
-                <i className='fa fa-chevron-right'></i>
-              </button>
-            </div>
-            <p>Pg {page + 1}/{maxPage + 1}</p>
-          </div>
+          {this.renderPager(dispatch)}
         </div>
       </div>
     )
@@ -93,13 +110,11 @@ class App extends React.Component {
   // main rendering frame with endpoint selection control
   render () {
     const {stories, selectedEndpoint} = this.props
-    const storiesCount = (stories) ? stories.length : 0
-    const storyText = (storiesCount === 1) ? 'story' : 'stories'
 
     return (
       <div>
         <div className='navbar-default'>
-          <div className='container-fluid'>
+          <div className='container'>
             <div className='navbar-header'>
               <span className='navbar-brand'>Hacker News</span>
             </div>
@@ -119,7 +134,9 @@ class App extends React.Component {
           </div>
         </div>
 
-        {this.shouldRenderStories()}
+        <div className='container'>
+          {this.shouldRenderStories()}
+        </div>
       </div>
     )
   }
