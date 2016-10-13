@@ -5,9 +5,9 @@ import React from 'react'
 
 class Selector extends React.Component {
   render() {
-    const {options, value, onChange} = this.props
+    const {options, value, onChange, name, className} = this.props
     return (
-      <select onChange={event => (onChange(event.target.value))} value={value}>
+      <select onChange={event => (onChange(event.target.value))} value={value} name={name} className={className}>
         {options.map(option => {
           return (
             <option key={option} value={option}>

@@ -1,5 +1,9 @@
 // define any bootstrap var overrides:
 
+
+///////////////////////////////////////////////////////////////////////
+//  BOOTSTRAP
+
 // wellframe bootstrap colors, extracted from wellframe site
 $brand-primary: #428bca;
 $brand-success: #5cb85c;
@@ -7,7 +11,49 @@ $brand-warning: #f0ad4e;
 $brand-danger: #d9534f;
 $brand-info: #5bc0de;
 
-
-
-// import Bootstrap library
 @import '../../node_modules/bootstrap-sass/assets/stylesheets/_bootstrap.scss';
+
+///////////////////////////////////////////////////////////////////////
+// FontAwesome
+
+$fa-font-path: "/dist/assets/fonts";
+$fa-font-size-base: $font-size-base;
+@import '../../node_modules/font-awesome/scss/font-awesome.scss';
+
+
+
+
+.pagerButtons {
+  clear: both;
+
+  .btn-group {
+    float: left;
+    margin-right: 15px;
+  }
+
+  p {
+    line-height: 30px;
+    // margin-left: 15px;
+  }
+
+  .fa-chevron-left {
+    margin-right: 0.5em;
+  }
+
+  .fa-chevron-right {
+    margin-left: 0.5em;
+  }
+}
+
+
+select.category-selector {
+  text-transform: capitalize;
+  option {
+    text-transform: capitalize;
+  }
+}
+
+
+.story-list-heading {
+  text-transform: capitalize;
+}

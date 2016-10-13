@@ -22,7 +22,7 @@ class App extends React.Component {
   // helper for rendering stories in a keyed list
   renderStory(storyId) {
     return (
-      <li key={storyId}>
+      <li key={storyId} className='col-sm-12'>
         <Story storyId={storyId} />
       </li>
     )
@@ -36,30 +36,58 @@ class App extends React.Component {
     }
   }
 
+
+  getLabelTitle(endpoint){
+    switch (endpoint) {
+      case 'new':
+        return 'newest'
+      default:
+        return endpoint
+    }
+  }
+
+
+
+
   // renders the table of stories, along with pagination controls
-  //  todo: break this out into a separate component
   renderStories() {
-    const {stories, page, perPage, totalItems, maxPage, dispatch} = this.props
+    const {stories, page, perPage, totalItems, maxPage, dispatch, selectedEndpoint} = this.props
 
     //pagination calcs
     const minIndex = (page * perPage)
     const maxIndex = ((page + 1) * perPage)
+    const titleLabel = this.getLabelTitle(selectedEndpoint)
 
     return (
-      <div>
-        <ol start={minIndex + 1}>
-          {stories.slice(minIndex, maxIndex).map(this.renderStory)}
-        </ol>
+      <div className='row'>
+        <div className='col-sm-12'>
 
-        <p>Page: {page + 1} of {maxPage + 1}</p>
+          <h2 className='story-list-heading'>{titleLabel} {stories.length} Stories</h2>
 
-        <div>
-          <button onClick={e => dispatch(goPrevPage())}>Prev</button>
-          <button onClick={e => dispatch(goNextPage())}>Next</button>
+
+          <ol start={minIndex + 1} className='row'>
+            {stories.slice(minIndex, maxIndex).map(this.renderStory)}
+          </ol>
+
+          <div className='pagerButtons'>
+            <div className='btn-group'>
+              <button className='btn btn-sm btn-primary' onClick={e => dispatch(goPrevPage())}>
+                <i className='fa fa-chevron-left'></i>
+                Prev
+              </button>
+              <button className='btn btn-sm btn-primary' onClick={e => dispatch(goNextPage())}>
+                Next
+                <i className='fa fa-chevron-right'></i>
+              </button>
+            </div>
+            <p>Pg {page + 1}/{maxPage + 1}</p>
+          </div>
         </div>
       </div>
     )
   }
+
+
 
 
   // main rendering frame with endpoint selection control
@@ -70,10 +98,26 @@ class App extends React.Component {
 
     return (
       <div>
-        <Selector value={selectedEndpoint} onChange={this.handleEndpointChange} options={ENDPOINT_OPTIONS} />
-        <hr />
-        <p>{storiesCount} {storyText} loaded for category {selectedEndpoint}</p>
-        <hr />
+        <div className='navbar-default'>
+          <div className='container-fluid'>
+            <div className='navbar-header'>
+              <span className='navbar-brand'>Hacker News</span>
+            </div>
+
+            <div className='navbar-form navbar-right'>
+              <div className='form-group'>
+                <label htmlFor='categorySelector'>Choose Category:&nbsp;</label>
+                <Selector
+                  value={selectedEndpoint}
+                  onChange={this.handleEndpointChange}
+                  options={ENDPOINT_OPTIONS}
+                  name='categorySelector'
+                  className='form-control category-selector'
+                />
+              </div>
+            </div>
+          </div>
+        </div>
 
         {this.shouldRenderStories()}
       </div>
