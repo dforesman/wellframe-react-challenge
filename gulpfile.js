@@ -1,11 +1,13 @@
-var gulp = require('gulp');
-var sass = require('gulp-sass');
-var gulpCopy = require('gulp-copy');
+var gulp = require('gulp')
+var sass = require('gulp-sass')
+var gulpCopy = require('gulp-copy')
 var del = require('del')
+var webpack = require('webpack-stream')
+var babel = require('gulp-babel')
 
+var webpackConfig = require('./webpack.config.js')
 var outputPath = './dist'
 var assetPath = outputPath + '/assets'
-
 
 gulp.task('sass', function(){
   return gulp.src('./src/styles/**/*.scss')
@@ -24,8 +26,17 @@ gulp.task('fontAwesome', function(){
 
 
 gulp.task('clean', function(){
-  return del([assetPath])
+  return del([outputPath])
 })
 
 
-gulp.task('default', ['sass', 'fontAwesome']);
+gulp.task('dev', ['sass', 'fontAwesome'], function(){
+  return gulp.src('./src/index.jsx')
+    .pipe(babel())
+    .pipe(webpack(webpackConfig))
+    .pipe(gulp.dest(outputPath))
+})
+
+
+
+gulp.task('default', ['dev']);

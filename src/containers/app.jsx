@@ -83,13 +83,14 @@ class App extends React.Component {
     const minIndex = (page * perPage)
     const maxIndex = ((page + 1) * perPage)
     const titleLabel = this.getLabelTitle(selectedEndpoint)
+    const pageDisplay = `Page ${page + 1} of ${maxPage + 1}`
 
     return (
       <div className='row'>
         <div className='col-sm-12'>
 
           <div className='story-list-heading'>
-            <h2>{titleLabel} {stories.length} Stories <small>Page {page+1} of {maxPage+1}</small></h2>
+            <h2>{titleLabel} {stories.length} Stories <small>{pageDisplay}</small></h2>
           </div>
 
           {this.renderPager(dispatch)}
